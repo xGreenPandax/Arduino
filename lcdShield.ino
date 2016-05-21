@@ -48,13 +48,13 @@ void setup()
   delay(700);
   lcd.clear();
   lcd.setCursor(0,0);
-  lcd.print("Ne hodite deti");
+  lcd.print("     (*^_^*)  ");
   lcd.setCursor(0,1);
-  lcd.print("   v shkolu");
+  lcd.print("  ");
   irrecv.enableIRIn(); 
   Serial.begin(9600); 
   pinMode(ir, OUTPUT);
-  pinMode(led, OUTPUT);
+  //pinMode(led, OUTPUT);
   pinMode(12, OUTPUT);
   digitalWrite(12, LOW);
   }
@@ -68,6 +68,11 @@ void leds(int timer)
         digitalWrite(led, LOW);
         delay(timer);
       }
+}
+
+void kolo(int shim)
+{
+  analogWrite(led, shim);
 }
 
 void(* resetFunc) (void) = 0;
@@ -90,9 +95,16 @@ void loop()
         }
         break;
     case 0xFF629D:
-        leds(100);
+        lcd.setCursor(0, 0);
+        lcd.print("                   ");
+        lcd.setCursor(0,1);
+        lcd.print("                   ");
+        lcd.setCursor(0, 0);
+        lcd.print("Temp:");
+        lcd.setCursor(6, 0);
+        lcd.print(GetTemp(),1);
         break;
-    case 0xFF9867:
+    case 0xFF9867:  //strelochki
         lcd.setCursor(0, 0);
         lcd.print("                   ");
         lcd.setCursor(0,1);
@@ -101,6 +113,17 @@ void loop()
         lcd.print("     RELOAD");
         delay(1000);
         resetFunc();
+        break;
+    case 0xFF906F:  //plus
+        
+        kolo(255);
+        break;
+    case 0xFFA857:  //minus
+        
+        kolo(0);
+        break;
+    case 0xFFE01F: //eq
+        setup();
         break;
     }    
     irrecv.resume(); // принимаем следующую команду
@@ -147,4 +170,35 @@ void loop()
       
        break;
   }
+}
+
+double GetTemp(void)
+{
+  unsigned int wADC;
+  double t;
+
+  // The internal temperature has to be used
+  // with the internal reference of 1.1V.
+  // Channel 8 can not be selected with
+  // the analogRead function yet.
+
+  // Set the internal reference and mux.
+  ADMUX = (_BV(REFS1) | _BV(REFS0) | _BV(MUX3));
+  ADCSRA |= _BV(ADEN);  // enable the ADC
+
+  delay(20);            // wait for voltages to become stable.
+
+  ADCSRA |= _BV(ADSC);  // Start the ADC
+
+  // Detect end-of-conversion
+  while (bit_is_set(ADCSRA,ADSC));
+
+  // Reading register "ADCW" takes care of how to read ADCL and ADCH.
+  wADC = ADCW;
+
+  // The offset of 324.31 could be wrong. It is just an indication.
+  t = (wADC - 324.31 ) / 1.22;
+
+  // The returned temperature is in degrees Celsius.
+  return (t);
 }
