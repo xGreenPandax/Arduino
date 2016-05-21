@@ -170,6 +170,17 @@ void loop()
       
        break;
   }
+  /*if(GetTemp(),1 < 24.0)
+  {
+    lcd.setCursor(12,1);
+    lcd.print("cold");
+  }
+  if(GetTemp(),1 > 28.0)
+  {
+    lcd.setCursor(13,1);
+    lcd.print("hot");
+  }*/
+  
 }
 
 double GetTemp(void)
